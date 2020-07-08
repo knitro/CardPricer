@@ -1,6 +1,6 @@
 package knitro.betterSearch_legacy.search.impl;
 
-import knitro.betterSearch_legacy.database.filter.Filter;
+import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch_legacy.search.Search;
 
 public class SearchImpl implements Search {

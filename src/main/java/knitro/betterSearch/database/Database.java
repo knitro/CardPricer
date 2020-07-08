@@ -1,9 +1,9 @@
-package knitro.betterSearch_legacy.database;
+package knitro.betterSearch.database;
 
 import java.util.Map;
 import java.util.Set;
 
-import knitro.betterSearch_legacy.database.card.DbItem;
+import knitro.betterSearch.database.card.DbItem;
 import knitro.betterSearch_legacy.search.Search;
 
 public interface Database {

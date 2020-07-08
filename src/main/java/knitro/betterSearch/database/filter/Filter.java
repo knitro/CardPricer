@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.database.filter;
+package knitro.betterSearch.database.filter;
 
 import java.util.HashSet;
 import java.util.Set;

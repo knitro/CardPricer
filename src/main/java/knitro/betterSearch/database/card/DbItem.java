@@ -1,11 +1,11 @@
-package knitro.betterSearch_legacy.database.card;
+package knitro.betterSearch.database.card;
 
 import java.util.Collections;
 import java.util.Set;
 
-import knitro.betterSearch_legacy.database.filter.CardColour;
-import knitro.betterSearch_legacy.database.filter.CardType;
-import knitro.betterSearch_legacy.database.filter.TypeOfMatch;
+import knitro.betterSearch.database.filter.CardColour;
+import knitro.betterSearch.database.filter.CardType;
+import knitro.betterSearch.database.filter.TypeOfMatch;
 import knitro.support.InvalidModeException;
 import knitro.support.Preconditions;
 

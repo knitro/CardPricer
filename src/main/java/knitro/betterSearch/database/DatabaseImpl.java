@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.database;
+package knitro.betterSearch.database;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,12 +19,12 @@ import javax.json.JsonValue;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
-import knitro.betterSearch_legacy.database.card.DbItem;
-import knitro.betterSearch_legacy.database.card.DbItemImpl;
-import knitro.betterSearch_legacy.database.filter.CardColour;
-import knitro.betterSearch_legacy.database.filter.CardType;
-import knitro.betterSearch_legacy.database.filter.Filter;
-import knitro.betterSearch_legacy.database.filter.TypeOfMatch;
+import knitro.betterSearch.database.card.DbItem;
+import knitro.betterSearch.database.card.DbItemImpl;
+import knitro.betterSearch.database.filter.CardColour;
+import knitro.betterSearch.database.filter.CardType;
+import knitro.betterSearch.database.filter.Filter;
+import knitro.betterSearch.database.filter.TypeOfMatch;
 import knitro.betterSearch_legacy.search.Search;
 import knitro.support.Preconditions;
 

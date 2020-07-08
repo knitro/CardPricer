@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.database.filter;
+package knitro.betterSearch.database.filter;
 
 public enum TypeOfMatch {
 	EXACT_MATCH,

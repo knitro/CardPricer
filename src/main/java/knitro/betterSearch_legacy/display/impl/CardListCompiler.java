@@ -9,10 +9,10 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import knitro.betterSearch_legacy.database.Database;
-import knitro.betterSearch_legacy.database.DatabaseImpl;
-import knitro.betterSearch_legacy.database.card.DbItem;
-import knitro.betterSearch_legacy.database.filter.Filter;
+import knitro.betterSearch.database.Database;
+import knitro.betterSearch.database.DatabaseImpl;
+import knitro.betterSearch.database.card.DbItem;
+import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch_legacy.priceGetter.PriceGetter;
 import knitro.betterSearch_legacy.priceGetter.info.CardImage;
 import knitro.betterSearch_legacy.priceGetter.info.CardInfo;
