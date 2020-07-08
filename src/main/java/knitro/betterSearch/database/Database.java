@@ -7,14 +7,27 @@ import knitro.betterSearch.database.card.DbItem;
 import knitro.betterSearch.database.search.Search;
 
 public interface Database {
-
-	public abstract Set<DbItem> getCards(Search card);
 	
+	///////////////////////////////////
+	/*Initialisation Methods*/
+	///////////////////////////////////
+
 	public abstract boolean loadDatabase();
 	
 	public abstract boolean isLoaded();
 	
 	public abstract boolean reloadDatabase();
+	
+	
+	///////////////////////////////////
+	/*Main Methods*/
+	///////////////////////////////////
+	
+	public abstract Set<DbItem> getCards(Search card);
+	
+	///////////////////////////////////
+	/*Other Methods*/
+	///////////////////////////////////
 	
 	public abstract Map<String, String> getSetMap();
 }
