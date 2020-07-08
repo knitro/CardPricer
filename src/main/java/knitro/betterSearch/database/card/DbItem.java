@@ -25,6 +25,8 @@ public abstract class DbItem {
 	private final String fullType;
 	private final String text;
 	
+	private int sortingValue; //Used for comparators
+	
 	///////////////////////////////////
 	/*Constructors*/
 	///////////////////////////////////
@@ -50,7 +52,7 @@ public abstract class DbItem {
 	///////////////////////////////////
 	/*Public Methods*/
 	///////////////////////////////////
-	
+
 	public String getName() {
 		return name;
 	}
@@ -81,6 +83,14 @@ public abstract class DbItem {
 	
 	public String getText() {
 		return text;
+	}
+	
+	public int getSortingValue() {
+		return sortingValue;
+	}
+
+	public void setSortingValue(int sortingValue) {
+		this.sortingValue = sortingValue;
 	}
 	
 	///////////////////////////////////

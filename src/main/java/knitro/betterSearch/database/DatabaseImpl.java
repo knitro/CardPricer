@@ -5,10 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -31,7 +33,7 @@ import knitro.support.Preconditions;
 public class DatabaseImpl implements Database {
 
 	///////////////////////////////////
-	/*Fields*/
+	/*Constants*/
 	///////////////////////////////////
 	
 	/*Locations*/
@@ -39,6 +41,19 @@ public class DatabaseImpl implements Database {
 	private static final String DB_NAME = "AllCards.json";
 	private static final String SET_LIST_NAME = "SetList.json";
 //	private static final String TYPE_LIST_NAME = "CardTypes.json";
+	
+	private static final Comparator<DbItem> dbItemComparator_cardName = new Comparator<DbItem>(){
+		
+		@Override
+		public int compare(DbItem o1, DbItem o2) {
+			return o1.getSortingValue() - o2.getSortingValue();
+		}
+	};
+
+	
+	///////////////////////////////////
+	/*Fields*/
+	///////////////////////////////////
 	
 	/*General Fields*/
 	private boolean loaded;
@@ -52,6 +67,7 @@ public class DatabaseImpl implements Database {
 	
 	//TODO:: Make this adjustable
 	private TypeOfMatch matching = TypeOfMatch.INCLUDE_LEAST_ONE;
+	
 	
 	///////////////////////////////////
 	/*Constructors*/
@@ -79,7 +95,7 @@ public class DatabaseImpl implements Database {
 		int marginOfError = card.getMarginOfError();
 		Map<String, DbItem> filteredDatabase = new HashMap<>();
 		Filter searchFilter = card.getFilter();
-		Set<DbItem> results = new HashSet<>();
+		Set<DbItem> results = new TreeSet<>(dbItemComparator_cardName);
 		
 		/*Get Possible Matching Cards*/
 		//Step 1: Apply any Filters
@@ -162,6 +178,7 @@ public class DatabaseImpl implements Database {
 			//Check if card meets Margin of Error condition
 			if (distance <= marginOfError) {
 				DbItem result = filteredDatabase.get(cardName);
+				result.setSortingValue(distance);
 				results.add(result);
 				if (results.size() >= 100) {
 					System.out.println("Too many results. Displaying Top results");
