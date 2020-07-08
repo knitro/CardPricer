@@ -7,9 +7,8 @@ import knitro.betterSearch.database.filter.CardType;
 
 public class DbItemImpl extends DbItem {
 
-	public DbItemImpl(String name, Set<String> printings, Set<CardColour> colours, Set<CardType> subtypes, int cmc, String fullType, String text) {
-		super(name, printings, colours, subtypes, cmc, fullType, text);
-		// TODO Auto-generated constructor stub
+	public DbItemImpl(String name, Set<CardColour> colours, Set<CardType> subtypes, int cmc, String fullType, String text) {
+		super(name, colours, subtypes, cmc, fullType, text);
 	}
 
 }

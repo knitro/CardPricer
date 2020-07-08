@@ -1,6 +1,8 @@
 package knitro.betterSearch.database.card;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import knitro.betterSearch.database.filter.CardColour;
@@ -16,7 +18,8 @@ public abstract class DbItem {
 	///////////////////////////////////
 	
 	private final String name;
-	private final Set<String> printings;
+	private final List<DbPrinting> printings;
+	private boolean isSorted;
 	
 	private final Set<CardColour> colours;
 	private final Set<CardType> types;
@@ -31,13 +34,13 @@ public abstract class DbItem {
 	/*Constructors*/
 	///////////////////////////////////
 	
-	public DbItem(String name, Set<String> printings,
-			Set<CardColour> colours, Set<CardType> type, int cmc,
-			String fullType, String text) {
+	public DbItem(String name, Set<CardColour> colours, Set<CardType> type, 
+			int cmc, String fullType, String text) {
+		
 		super();
 		this.name = name;
-		this.printings = printings;
-		
+		this.printings = new ArrayList<>();
+		this.isSorted = false;
 		this.colours = colours;
 		this.types = type;
 		this.cmc = cmc;
@@ -57,14 +60,14 @@ public abstract class DbItem {
 		return name;
 	}
 
-	public Set<String> getPrintings() {
-		return Collections.unmodifiableSet(printings);
+	public List<DbPrinting> getPrintings() {
+		return Collections.unmodifiableList(printings);
 	}
 	
-	public Set<String> getModifiablePrintings() {
+	public List<DbPrinting> getModifiablePrintings() {
 		return printings;
 	}
-
+	
 	public Set<CardColour> getColours() {
 		return Collections.unmodifiableSet(colours);
 	}
@@ -91,6 +94,33 @@ public abstract class DbItem {
 
 	public void setSortingValue(int sortingValue) {
 		this.sortingValue = sortingValue;
+	}
+	
+	public void addPrinting(DbPrinting printing) {
+		printings.add(printing);
+	}
+	
+	/**
+	 * This method will return a List with:
+	 * <ul>
+	 * 	<li>index = 0 ==> printing (set)
+	 * 	<li>index = 1 ==> id (collector number)
+	 * </ul>
+	 * @param index
+	 * @return
+	 */
+	public DbPrinting getDbPrinting(int index) {
+		
+		/*Precondition Check*/
+		Preconditions.preconditionCheck(index < printings.size(), "index is too large");
+		Preconditions.preconditionCheck(index >= 0, "index is too small");
+		
+		if (!isSorted) {
+			Collections.sort(printings);
+			isSorted = true;
+		}
+		
+		return printings.get(index);
 	}
 	
 	///////////////////////////////////

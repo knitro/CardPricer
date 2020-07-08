@@ -505,7 +505,7 @@ public class JavaFxApplication extends Application {
 		else if (numOfResults == 1) {
 			
 			for (DbItem query : possibleCards) { //Note: This loop should only once
-				Set<String> printings = query.getPrintings();
+//				<String> printings = query.getPrintings();
 				
 				//Check if there is only 1 printing :: Shortcut does not work. Collectors number is required
 				/*

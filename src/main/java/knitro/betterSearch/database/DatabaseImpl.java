@@ -4,12 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import javax.json.Json;
@@ -23,11 +30,13 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import knitro.betterSearch.database.card.DbItem;
 import knitro.betterSearch.database.card.DbItemImpl;
+import knitro.betterSearch.database.card.DbPrinting;
 import knitro.betterSearch.database.filter.CardColour;
 import knitro.betterSearch.database.filter.CardType;
 import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.filter.TypeOfMatch;
 import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.impl.SearchImpl;
 import knitro.support.Preconditions;
 
 public class DatabaseImpl implements Database {
@@ -38,7 +47,7 @@ public class DatabaseImpl implements Database {
 	
 	/*Locations*/
 	private static final String DB_LOCATION = "data/mtg/";
-	private static final String DB_NAME = "AllCards.json";
+	private static final String DB_NAME = "AllPrintings.json";
 	private static final String SET_LIST_NAME = "SetList.json";
 //	private static final String TYPE_LIST_NAME = "CardTypes.json";
 	
@@ -189,6 +198,7 @@ public class DatabaseImpl implements Database {
 		
 		System.out.println("Finished Search for: \"" + card.getSearchTerm() 
 				+ "\" with " + results.size() + " results");
+		
 		return results;
 	}
 
@@ -279,79 +289,112 @@ public class DatabaseImpl implements Database {
 	private void loadAllCards() {
 		
 		/*Variable Initialisation*/
-		System.out.println("AllCards Loading: Started");
+		System.out.println("AllPrintings Loading: Started");
 		database = new HashMap<>();
-		JsonObject dataJSON = null;
 		
 		/*Load Database*/
 		String directory = DB_LOCATION + DB_NAME;
 		
 		JsonReader jsonReader = loadJSON(directory);
-		dataJSON = jsonReader.readObject();
-		assert(dataJSON != null);
+		JsonObject overarchJSON = jsonReader.readObject();
+		JsonValue dataJSON = overarchJSON.get("data");
+		JsonObject dataJSON_object = dataJSON.asJsonObject();
+		
+		
 		
 		/*Load Database in Map*/
-		for (String key : dataJSON.keySet()) {
+		for (String attribute: dataJSON_object.keySet()) {
 			
-			JsonValue currentValue = dataJSON.get(key);
+			//Get Set
+			JsonValue currentSet_value = dataJSON_object.get(attribute);
+			JsonObject currentSet_object = currentSet_value.asJsonObject();
+			String currentSet_code = currentSet_object.getString("code");
 			
-			JsonObject currentJSON = currentValue.asJsonObject();
-			
-			//Get Card Name
-			String cardName = currentJSON.getString("name");
-			final String lowercaseName = cardName.toLowerCase(); 
-			
-			//Get Printings
-			JsonArray printingsJSON = currentJSON. getJsonArray("printings");
-			Set<String> printings = new HashSet<>();
-			for (int j = 0; j < printingsJSON.size(); j++) {
-				String currentPrinting = printingsJSON.getString(j);
-				printings.add(currentPrinting);
+			//Add the Release Date of the set
+			String releaseDateString = currentSet_object.getString("releaseDate");
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+			format.setTimeZone(TimeZone.getTimeZone("UTC"));
+			Date currentDate = null;
+			try {
+				currentDate = format.parse(releaseDateString.trim());
+			} catch (ParseException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Date Parsing Error");
 			}
 			
-			//Get Colours
-			JsonArray coloursJSON = currentJSON. getJsonArray("colorIdentity");
-			Set<CardColour> colours = new HashSet<>();
-			for (int j = 0; j < coloursJSON.size(); j++) {
-				String currentColour_string = coloursJSON.getString(j);
-				CardColour currentColour_cardColour = CardColour.getCardColour(currentColour_string);
-				colours.add(currentColour_cardColour);
-			}
+			//Get Cards
+			JsonValue currentCards_value = currentSet_object.get("cards");
+			JsonArray currentCards_array = currentCards_value.asJsonArray();
 			
-			//Get Types
-			JsonArray typesJSON = currentJSON.getJsonArray("types");
-			Set<CardType> types = new HashSet<>();
-			for (int j = 0; j < typesJSON.size(); j++) {
-				String currentPrinting_string = typesJSON.getString(j);
-				CardType currentPrinting_cardType = CardType.getCardSubType(currentPrinting_string);
-				if (currentPrinting_cardType != CardType.META) {
-					types.add(currentPrinting_cardType);
+			//Add All the Cards
+			for (int setIndex = 0; setIndex < currentCards_array.size(); setIndex++) {
+				
+				//Get the JSON Card Value
+				JsonValue currentCard_value = currentCards_array.get(setIndex);
+				JsonObject currentJSON = currentCard_value.asJsonObject();
+				
+				//Get Card Name
+				String cardName = currentJSON.getString("name");
+				final String lowercaseName = cardName.toLowerCase(); 
+				
+				//Check if Card already exists in Database, Otherwise Get the Card
+				DbItem currentCardEntry = null;
+				if (database.containsKey(lowercaseName)) {
+					currentCardEntry = database.get(lowercaseName);
+				} else {
+					
+					//Get Colours
+					JsonArray coloursJSON = currentJSON. getJsonArray("colorIdentity");
+					Set<CardColour> colours = new HashSet<>();
+					for (int j = 0; j < coloursJSON.size(); j++) {
+						String currentColour_string = coloursJSON.getString(j);
+						CardColour currentColour_cardColour = CardColour.getCardColour(currentColour_string);
+						colours.add(currentColour_cardColour);
+					}
+					
+					//Get Types
+					JsonArray typesJSON = currentJSON.getJsonArray("types");
+					Set<CardType> types = new HashSet<>();
+					for (int j = 0; j < typesJSON.size(); j++) {
+						String currentPrinting_string = typesJSON.getString(j);
+						CardType currentPrinting_cardType = CardType.getCardSubType(currentPrinting_string);
+						if (currentPrinting_cardType != CardType.META) {
+							types.add(currentPrinting_cardType);
+						}
+					}
+					
+					//Get CMC
+					int cmc = currentJSON.getInt("convertedManaCost");
+					
+					//Get Full Type
+					String fullType = currentJSON.getString("type");
+					
+					//Get Card Text
+					JsonString value = currentJSON.getJsonString("text");
+					String text = null;
+					if (value == null) { //This is here since getString("text") can return null
+						text = "";
+					} else {
+						text = value.getString();
+					}
+					
+					//Create DbItem and place into Database
+					currentCardEntry = new DbItemImpl(cardName, colours, types, cmc, fullType, text);
+					database.put(lowercaseName, currentCardEntry);
+					cardNames.add(lowercaseName);
 				}
+				
+				//Get the DbPrinting
+				String currentID = currentJSON.getString("number");
+				
+				//Create add add the instance
+				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate);
+				currentCardEntry.addPrinting(currentPrinting);
 			}
-			
-			//Get CMC
-			int cmc = currentJSON.getInt("convertedManaCost");
-			
-			//Get Full Type
-			String fullType = currentJSON.getString("type");
-			
-			//Get Card Text
-			JsonString value = currentJSON.getJsonString("text");
-			String text = null;
-			if (value == null) { //This is here since getString("text") can return null
-				text = "";
-			} else {
-				text = value.getString();
-			}
-			
-			//Create DbItem and place into Database
-			DbItem result = new DbItemImpl(cardName, printings, colours, types, cmc, fullType, text);
-			database.put(lowercaseName, result);
-			cardNames.add(lowercaseName);
 		}
 		
 		/*Clean-Up*/
-		System.out.println("AllCards Loading: Finished");
+		System.out.println("AllPrintings Loading: Finished");
 	}
 	
 	private void loadSetList() {
@@ -359,13 +402,13 @@ public class DatabaseImpl implements Database {
 		/*Variable Initialisation*/
 		System.out.println("SetList Loading: Started");
 		setListMap = new HashMap<>();
-		JsonObject dataJSON = null;
 		
 		/*Load Database*/
 		String directory = DB_LOCATION + SET_LIST_NAME;
 		JsonReader jsonReader = loadJSON(directory);
-		JsonArray arrayJSON = jsonReader.readArray();
-		assert(dataJSON != null);
+		JsonObject overarchJSON = jsonReader.readObject();
+		JsonValue dataJSON = overarchJSON.get("data");
+		JsonArray arrayJSON = dataJSON.asJsonArray();
 		
 		/*Load Database in Map*/
 		for (int j = 0; j < arrayJSON.size(); j++) {
@@ -395,5 +438,24 @@ public class DatabaseImpl implements Database {
 		
 		/*Return*/
 		return Collections.unmodifiableMap(setListMap);
+	}
+	
+	
+	public static void main (String[] args) {
+		DatabaseImpl test = new DatabaseImpl();
+		test.loadDatabase();
+		Set<DbItem> cardList = test.getCards(new SearchImpl("Llanowar Elves", false, 0, new Filter()));
+		
+		Iterator<DbItem> cardListIterator = cardList.iterator();
+		DbItem firstOutput = cardListIterator.next();
+		System.out.println(firstOutput.getModifiablePrintings().size());
+		DbPrinting printing = firstOutput.getDbPrinting(0);
+		
+		
+    	String setCode = printing.getSetCode().toLowerCase();
+    	String id = printing.getId();
+    	
+    	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
+    	System.out.println(url);
 	}
 }
