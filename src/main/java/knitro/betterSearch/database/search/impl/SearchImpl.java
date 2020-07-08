@@ -18,6 +18,13 @@ public class SearchImpl implements Search {
 	/*Constructors*/
 	///////////////////////////////////
 
+	/**
+	 * Default Constructor for SearchImpl.
+	 * @param searchTerm - The string term that is being used to compare with other card names.
+	 * @param isBuy - Determines whether the search is for buying price (true), or selling price (false).
+	 * @param marginOfError - The margin of error (MoE) using Levenshtein Distance that is allowed for the search.
+	 * @param filter - The filter of the search.
+	 */
 	public SearchImpl(String searchTerm, boolean isBuy, int marginOfError, Filter filter) {
 		super();
 		this.searchTerm = searchTerm;
