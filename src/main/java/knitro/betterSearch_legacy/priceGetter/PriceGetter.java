@@ -2,9 +2,9 @@ package knitro.betterSearch_legacy.priceGetter;
 
 import java.util.List;
 
+import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch_legacy.priceGetter.info.CardInfo;
-import knitro.betterSearch_legacy.search.Search;
-import knitro.betterSearch_legacy.search.Style;
 
 public interface PriceGetter {
 	

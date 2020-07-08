@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.search;
+package knitro.betterSearch.database.search;
 
 import knitro.betterSearch.database.filter.Filter;
 

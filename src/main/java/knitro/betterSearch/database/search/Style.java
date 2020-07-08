@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.search;
+package knitro.betterSearch.database.search;
 
 /**
  * Enum to describe whether the card style is to be any, foil or non-foil.

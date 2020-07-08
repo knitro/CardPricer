@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import knitro.betterSearch.database.card.DbItem;
-import knitro.betterSearch_legacy.search.Search;
+import knitro.betterSearch.database.search.Search;
 
 public interface Database {
 

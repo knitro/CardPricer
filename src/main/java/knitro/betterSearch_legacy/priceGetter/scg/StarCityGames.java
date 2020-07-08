@@ -13,12 +13,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch_legacy.priceGetter.AbstractPriceGetter;
 import knitro.betterSearch_legacy.priceGetter.info.CardImage;
 import knitro.betterSearch_legacy.priceGetter.info.CardInfo;
 import knitro.betterSearch_legacy.priceGetter.info.impl.CardInfoImpl;
-import knitro.betterSearch_legacy.search.Search;
-import knitro.betterSearch_legacy.search.Style;
 import knitro.support.Preconditions;
 
 public class StarCityGames extends AbstractPriceGetter {

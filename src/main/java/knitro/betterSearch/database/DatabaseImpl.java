@@ -25,7 +25,7 @@ import knitro.betterSearch.database.filter.CardColour;
 import knitro.betterSearch.database.filter.CardType;
 import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.filter.TypeOfMatch;
-import knitro.betterSearch_legacy.search.Search;
+import knitro.betterSearch.database.search.Search;
 import knitro.support.Preconditions;
 
 public class DatabaseImpl implements Database {
