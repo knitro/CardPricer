@@ -10,5 +10,11 @@ public class DbItemImpl extends DbItem {
 	public DbItemImpl(String name, Set<CardColour> colours, Set<CardType> subtypes, int cmc, String fullType, String text) {
 		super(name, colours, subtypes, cmc, fullType, text);
 	}
+	
+	public static final DbItem EMPTY = new DbItemImpl();
+	
+	private DbItemImpl() {
+		super();
+	}
 
 }

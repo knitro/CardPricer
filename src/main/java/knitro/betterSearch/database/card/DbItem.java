@@ -12,7 +12,7 @@ import knitro.support.InvalidModeException;
 import knitro.support.Preconditions;
 
 public abstract class DbItem {
-
+	
 	///////////////////////////////////
 	/*Fields*/
 	///////////////////////////////////
@@ -29,10 +29,26 @@ public abstract class DbItem {
 	private final String text;
 	
 	private long sortingValue; //Used for comparators
+	private final boolean isEmpty;
 	
 	///////////////////////////////////
 	/*Constructors*/
 	///////////////////////////////////
+	
+	/**
+	 * This constructor is to be only used for an "EMPTY" DbItem.
+	 */
+	protected DbItem() {
+		this.isEmpty = true;
+		this.types = null;
+		this.colours = null;
+		this.printings = null;
+		this.name = null;
+		this.fullType = null;
+		this.text = null;
+		this.cmc = -1;
+		
+	}
 	
 	public DbItem(String name, Set<CardColour> colours, Set<CardType> type, 
 			int cmc, String fullType, String text) {
@@ -46,6 +62,7 @@ public abstract class DbItem {
 		this.cmc = cmc;
 		this.fullType = fullType;
 		this.text = text;
+		this.isEmpty = false;
 	}
 	
 	///////////////////////////////////
