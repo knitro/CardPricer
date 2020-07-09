@@ -16,6 +16,7 @@ import org.jsoup.select.Elements;
 import knitro.betterSearch.database.search.Search;
 import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch.priceGetter.AbstractPriceGetter;
+import knitro.betterSearch.priceGetter.NoPriceFoundException;
 import knitro.betterSearch_legacy.priceGetter.info.CardImage;
 import knitro.betterSearch_legacy.priceGetter.info.CardInfo;
 import knitro.betterSearch_legacy.priceGetter.info.impl.CardInfoImpl;
@@ -367,7 +368,7 @@ public class StarCityGames extends AbstractPriceGetter {
 	}
 
 	@Override
-	public double getSpecificCardPrice(String cardName, String setName, String collectorNumber, Style style) {
+	public double getSpecificCardPrice(String cardName, String setName, String collectorNumber, Style style) throws NoPriceFoundException {
 		
 		String url = getSpecificCardURL(cardName, setName, collectorNumber, style);
 		String urlContents = null;
@@ -384,12 +385,18 @@ public class StarCityGames extends AbstractPriceGetter {
 		System.out.println("url = " + url);
 		
 		Elements productSectionClasses = doc.select("span.price.price--withoutTax");
-		Element productSectionClass = productSectionClasses.get(0); //Should be the first one
+		Element productSectionClass = null;
+		try {
+			productSectionClass = productSectionClasses.get(0); //Should be the first one
+		} catch (IndexOutOfBoundsException e) { //Must be 404 error
+			throw new NoPriceFoundException("No Price Found");
+		}
 		
 		String price = productSectionClass.text();
 		String price_editted = price.replace("$", "");
 		
 		return Double.parseDouble(price_editted);
+		
 	}
 	
 }

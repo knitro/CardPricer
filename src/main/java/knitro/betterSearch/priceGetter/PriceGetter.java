@@ -14,5 +14,5 @@ public interface PriceGetter {
 	
 	public abstract String getSpecificCardURL(String cardName, String setName, String collectorNumber, Style style);
 	
-	public abstract double getSpecificCardPrice(String cardName, String setName, String collectorNumber, Style style);
+	public abstract double getSpecificCardPrice(String cardName, String setName, String collectorNumber, Style style) throws NoPriceFoundException;
 }

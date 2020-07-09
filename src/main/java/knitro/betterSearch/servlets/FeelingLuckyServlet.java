@@ -2,6 +2,7 @@ package knitro.betterSearch.servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -13,11 +14,13 @@ import javax.servlet.http.HttpServletResponse;
 import knitro.betterSearch.database.Database;
 import knitro.betterSearch.database.DatabaseImpl;
 import knitro.betterSearch.database.card.DbItem;
+import knitro.betterSearch.database.card.DbItemImpl;
 import knitro.betterSearch.database.card.DbPrinting;
 import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.search.Search;
 import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch.database.search.impl.SearchImpl;
+import knitro.betterSearch.priceGetter.NoPriceFoundException;
 import knitro.betterSearch.priceGetter.PriceGetter;
 import knitro.betterSearch.priceGetter.scg.StarCityGames;
 
@@ -102,12 +105,17 @@ public class FeelingLuckyServlet extends HttpServlet {
 	 */
 	private void processForm(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		
+		if (request.getParameterMap().keySet().size() == 0) {
+			displayWebpage(request, response, null);
+			return;
+		}
+		
 		/*Get the Parameter*/
 		String param = request.getParameter("searchTerm");
 		
 		//Perform Null Checks
 		if (param == null) {
-			displayWebpage(request, response, null);
+			displayWebpage(request, response, DbItemImpl.EMPTY);
 			return;
 		}
 		
@@ -145,7 +153,7 @@ public class FeelingLuckyServlet extends HttpServlet {
 	 */
 	private Search generateSearch(String searchTerm) {
 		
-		Search returnSearch = new SearchImpl(searchTerm, false, 5, filter);
+		Search returnSearch = new SearchImpl(searchTerm, false, 0, filter);
 		return returnSearch;
 		
 	}
@@ -177,7 +185,13 @@ public class FeelingLuckyServlet extends HttpServlet {
         out.println("<button type=\"submit\"><i class=\"fa fa-search\"></i></button>");
         out.println("</form>");
         
-        if (card != null) {
+        
+        if (card == null) {
+        	//TODO::
+        } else if (card.equals(DbItemImpl.EMPTY)) {
+        	
+        	out.println("<h2> No Results Found </h2>");
+        } else {
         	
         	//Card Information:
         	String cardName = card.getName();
@@ -187,7 +201,6 @@ public class FeelingLuckyServlet extends HttpServlet {
         	String id = printing.getId();
         	
         	//Check Foiling:
-        	boolean hasFoil = printing.isHasFoil();
         	boolean hasNonFoil = printing.isHasNonFoil();
         	Style currentStyle = (!hasNonFoil) ? Style.FOIL : Style.NON_FOIL;
         	
@@ -197,8 +210,13 @@ public class FeelingLuckyServlet extends HttpServlet {
         	
         	//Card Prices:
         	PriceGetter scg = new StarCityGames();
-        	double scgPrice = scg.getSpecificCardPrice(cardName, setCode, id, currentStyle);
-        	out.println("<h4> StarCityGames Price: " + scgPrice +"</h4>");
+        	try {
+        		double scgPrice = scg.getSpecificCardPrice(cardName, setCode, id, currentStyle);
+            	out.println("<h4> StarCityGames Price: " + scgPrice +"</h4>");
+        	} catch (NoPriceFoundException e) {
+        		//This scenario suggests that the url gives out a 404
+        		out.println("<h4> StarCityGames Price: No Price Found </h4>");
+        	}
         	
         	//Card Image:
         	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";

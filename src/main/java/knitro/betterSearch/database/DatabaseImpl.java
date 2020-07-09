@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -25,8 +24,6 @@ import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 
-import org.apache.commons.text.similarity.LevenshteinDistance;
-
 import knitro.betterSearch.database.card.DbItem;
 import knitro.betterSearch.database.card.DbItemImpl;
 import knitro.betterSearch.database.card.DbPrinting;
@@ -35,10 +32,7 @@ import knitro.betterSearch.database.filter.CardType;
 import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.filter.TypeOfMatch;
 import knitro.betterSearch.database.search.Search;
-import knitro.betterSearch.database.search.Style;
-import knitro.betterSearch.database.search.impl.SearchImpl;
-import knitro.betterSearch.priceGetter.PriceGetter;
-import knitro.betterSearch.priceGetter.scg.StarCityGames;
+import knitro.betterSearch.database.typoanalysis.TypoAnalysis;
 import knitro.support.Preconditions;
 
 public class DatabaseImpl implements Database {
@@ -55,6 +49,36 @@ public class DatabaseImpl implements Database {
 	private static final String DB_NAME = "AllPrintings.json";
 	private static final String SET_LIST_NAME = "SetList.json";
 //	private static final String TYPE_LIST_NAME = "CardTypes.json";
+	
+	private static final Comparator<DbItem> dbItemComparator = new Comparator<DbItem>(){
+		
+		@Override
+		public int compare(DbItem o1, DbItem o2) {
+			
+			//Compare Sorting Value (using TypoAnalysis)
+			if (o1.getSortingValue() < o2.getSortingValue()) {
+				return 1;
+			} else if (o1.getSortingValue() > o2.getSortingValue())  {
+				return -1;
+			}
+			
+			//Compare Dates
+			DbPrinting o1_print = o1.getDbPrinting(0);
+			DbPrinting o2_print = o2.getDbPrinting(0);
+			
+			Date o1_date = o1_print.getDate();
+			Date o2_date = o2_print.getDate();
+			
+			if (o1_date.after(o2_date)) {
+				return -1;
+			} else if (o1_date.before(o2_date)) {
+				return 1;
+			} 
+			
+			//Compare Names
+			return (o1.getName().compareTo(o2.getName()));
+		}
+	};
 	
 	private static final Comparator<DbItem> dbItemComparator_cardName = new Comparator<DbItem>(){
 		
@@ -134,7 +158,7 @@ public class DatabaseImpl implements Database {
 		int marginOfError = card.getMarginOfError();
 		Map<String, DbItem> filteredDatabase = new HashMap<>();
 		Filter searchFilter = card.getFilter();
-		Set<DbItem> results = new TreeSet<>(dbItemComparator_releaseDate);
+		Set<DbItem> results = new TreeSet<>(dbItemComparator);
 		
 		/*Get Possible Matching Cards*/
 		//Step 1: Apply any Filters
@@ -189,6 +213,10 @@ public class DatabaseImpl implements Database {
 		Set<String> filteredCardNames = filteredDatabase.keySet();
 
 		//Step 2a: Get exact matches
+		
+		//Get Cleaned Search Terms:
+		searchTerm = TypoAnalysis.removeSpecialChars(searchTerm);
+		
 		if (filteredCardNames.contains(searchTerm)) {
 			DbItem result = filteredDatabase.get(searchTerm);
 			results.add(result);
@@ -199,22 +227,22 @@ public class DatabaseImpl implements Database {
 		//Step 2b: Get cards that have the word contained within
 		for (String cardName : filteredCardNames) {
 			
-			if (cardName.contains(searchTerm)) {
+			String cardName_cleaned = TypoAnalysis.removeSpecialChars(cardName);
+			if (cardName_cleaned.contains(searchTerm)) {
 				DbItem result = filteredDatabase.get(cardName);
 				results.add(result);
-				if (results.size() >= 100) {
+				if (results.size() >= MAX_NUM_OF_RESULTS) {
 					System.out.println("Too many results. Displaying Top results");
 					return results;
 				}
 			}		
 		}
 		
-		//Step 2c: Get close matches using the Levenshtein Distance.
-		LevenshteinDistance ld = new LevenshteinDistance();
+		//Step 2c: Get close matches using the TypoAnalysis Package.
 		
 		for (String cardName : filteredCardNames) {
+			int distance = TypoAnalysis.getDifference(searchTerm, cardName);
 			
-			int distance = ld.apply(searchTerm, cardName);
 			//Check if card meets Margin of Error condition
 			if (distance <= marginOfError) {
 				DbItem result = filteredDatabase.get(cardName);
@@ -519,23 +547,4 @@ public class DatabaseImpl implements Database {
 //		}
 //		
 //	}
-	
-	public static void main (String[] args) {
-		DatabaseImpl test = new DatabaseImpl();
-		test.loadDatabase();
-		Set<DbItem> cardList = test.getCards(new SearchImpl("Chandra, Bold", false, 0, new Filter()));
-		
-		Iterator<DbItem> cardListIterator = cardList.iterator();
-		DbItem firstOutput = cardListIterator.next();
-		
-		String cardName = firstOutput.getName();
-    	String cardType = firstOutput.getFullType();
-    	DbPrinting printing = firstOutput.getDbPrinting(0);
-    	String setCode = printing.getSetCode().toLowerCase();
-    	String id = printing.getId();
-		
-		PriceGetter scg = new StarCityGames();
-    	scg.getSpecificCardPrice(cardName, setCode, id, Style.NON_FOIL);
-		
-	}
 }
