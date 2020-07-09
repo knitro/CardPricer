@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +35,10 @@ import knitro.betterSearch.database.filter.CardType;
 import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.filter.TypeOfMatch;
 import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch.database.search.impl.SearchImpl;
+import knitro.betterSearch.priceGetter.PriceGetter;
+import knitro.betterSearch.priceGetter.scg.StarCityGames;
 import knitro.support.Preconditions;
 
 public class DatabaseImpl implements Database {
@@ -44,6 +46,9 @@ public class DatabaseImpl implements Database {
 	///////////////////////////////////
 	/*Constants*/
 	///////////////////////////////////
+	
+	/*Limits*/
+	public static final int MAX_NUM_OF_RESULTS = 10000;
 	
 	/*Locations*/
 	private static final String DB_LOCATION = "data/mtg/";
@@ -55,7 +60,32 @@ public class DatabaseImpl implements Database {
 		
 		@Override
 		public int compare(DbItem o1, DbItem o2) {
-			return o1.getSortingValue() - o2.getSortingValue();
+			if (o1.getSortingValue() > o2.getSortingValue()) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
+	};
+	
+	private static final Comparator<DbItem> dbItemComparator_releaseDate = new Comparator<DbItem>(){
+		
+		@Override
+		public int compare(DbItem o1, DbItem o2) {
+			
+			DbPrinting o1_print = o1.getDbPrinting(0);
+			DbPrinting o2_print = o2.getDbPrinting(0);
+			
+			Date o1_date = o1_print.getDate();
+			Date o2_date = o2_print.getDate();
+			
+			if (o1_date.after(o2_date)) {
+				return -1;
+			} else if (o1_date.before(o2_date)) {
+				return 1;
+			} else {
+				return (o1.getName().compareTo(o2.getName()));
+			}
 		}
 	};
 
@@ -104,7 +134,7 @@ public class DatabaseImpl implements Database {
 		int marginOfError = card.getMarginOfError();
 		Map<String, DbItem> filteredDatabase = new HashMap<>();
 		Filter searchFilter = card.getFilter();
-		Set<DbItem> results = new TreeSet<>(dbItemComparator_cardName);
+		Set<DbItem> results = new TreeSet<>(dbItemComparator_releaseDate);
 		
 		/*Get Possible Matching Cards*/
 		//Step 1: Apply any Filters
@@ -181,15 +211,18 @@ public class DatabaseImpl implements Database {
 		
 		//Step 2c: Get close matches using the Levenshtein Distance.
 		LevenshteinDistance ld = new LevenshteinDistance();
+		
 		for (String cardName : filteredCardNames) {
 			
 			int distance = ld.apply(searchTerm, cardName);
 			//Check if card meets Margin of Error condition
 			if (distance <= marginOfError) {
 				DbItem result = filteredDatabase.get(cardName);
-				result.setSortingValue(distance);
+				
+				this.setSortingValue(result);
+				
 				results.add(result);
-				if (results.size() >= 100) {
+				if (results.size() >= MAX_NUM_OF_RESULTS) {
 					System.out.println("Too many results. Displaying Top results");
 					return results;
 				}
@@ -201,7 +234,7 @@ public class DatabaseImpl implements Database {
 		
 		return results;
 	}
-
+	
 	@Override
 	public boolean loadDatabase() {
 		
@@ -224,6 +257,35 @@ public class DatabaseImpl implements Database {
 		return true;
 	}
 
+	@Override
+	public boolean isLoaded() {
+		return loaded;
+	}
+
+	@Override
+	public boolean reloadDatabase() {
+		this.loaded = false;
+		return loadDatabase();
+	}
+	
+	@Override
+	public Map<String, String> getSetMap() {
+		
+		/*Preconditions*/
+		Preconditions.preconditionCheck(loaded == true, "Database has not loaded");
+		
+		/*Return*/
+		return Collections.unmodifiableMap(setListMap);
+	}
+	
+	///////////////////////////////////
+	/*Public Methods*/
+	///////////////////////////////////
+	
+	///////////////////////////////////
+	/*Private Methods*/
+	///////////////////////////////////
+	
 	/**
 	 * Checks if the database file exists or not.
 	 * If not, it will execute the {@link #getDatabaseFile()} method.
@@ -246,26 +308,6 @@ public class DatabaseImpl implements Database {
 	private void getDatabaseFile() {
 		//TODO::
 	}
-
-	@Override
-	public boolean isLoaded() {
-		return loaded;
-	}
-
-	@Override
-	public boolean reloadDatabase() {
-		this.loaded = false;
-		return loadDatabase();
-	}
-	
-	
-	///////////////////////////////////
-	/*Public Methods*/
-	///////////////////////////////////
-	
-	///////////////////////////////////
-	/*Private Methods*/
-	///////////////////////////////////
 	
 	private JsonReader loadJSON(String directory) {
 		
@@ -387,8 +429,11 @@ public class DatabaseImpl implements Database {
 				//Get the DbPrinting
 				String currentID = currentJSON.getString("number");
 				
+				boolean hasFoil = currentJSON.getBoolean("hasFoil");
+				boolean hasNonFoil = currentJSON.getBoolean("hasNonFoil");
+				
 				//Create add add the instance
-				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate);
+				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate, hasFoil, hasNonFoil);
 				currentCardEntry.addPrinting(currentPrinting);
 			}
 		}
@@ -430,32 +475,67 @@ public class DatabaseImpl implements Database {
 		
 	}
 
-	@Override
-	public Map<String, String> getSetMap() {
+	private void setSortingValue(DbItem result) {
 		
-		/*Preconditions*/
-		Preconditions.preconditionCheck(loaded == true, "Database has not loaded");
+//		result.setSortingValue(distance);
+		DbPrinting latestPrinting = result.getDbPrinting(0);
+		Date releaseDate = latestPrinting.getDate();
+		result.setSortingValue(releaseDate.getTime());
 		
-		/*Return*/
-		return Collections.unmodifiableMap(setListMap);
 	}
 	
+	///////////////////////////////////
+	/*Main Method*/
+	///////////////////////////////////
+	
+//	public static void main (String[] args) {
+//		DatabaseImpl test = new DatabaseImpl();
+//		test.loadDatabase();
+//		Set<DbItem> cardList = test.getCards(new SearchImpl("Chandra", false, 0, new Filter()));
+//		
+//		Iterator<DbItem> cardListIterator = cardList.iterator();
+//		DbItem firstOutput = cardListIterator.next();
+//		System.out.println(firstOutput.getModifiablePrintings().size());
+//		DbPrinting printing = firstOutput.getDbPrinting(0);
+//		
+//		
+//    	String setCode = printing.getSetCode().toLowerCase();
+//    	String id = printing.getId();
+//    	
+//    	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
+//    	System.out.println(url);
+//	}
+	
+//	public static void main (String[] args) {
+//		DatabaseImpl test = new DatabaseImpl();
+//		test.loadDatabase();
+//		Set<DbItem> cardList = test.getCards(new SearchImpl("Chandra", false, 0, new Filter()));
+//		
+//		Iterator<DbItem> cardListIterator = cardList.iterator();
+//		while (cardListIterator.hasNext()) {
+//			DbItem output = cardListIterator.next();
+//			System.out.println(output.getDbPrinting(0).getDate() + "\t\t" + output.getName());
+//			
+//		}
+//		
+//	}
 	
 	public static void main (String[] args) {
 		DatabaseImpl test = new DatabaseImpl();
 		test.loadDatabase();
-		Set<DbItem> cardList = test.getCards(new SearchImpl("Llanowar Elves", false, 0, new Filter()));
+		Set<DbItem> cardList = test.getCards(new SearchImpl("Chandra, Bold", false, 0, new Filter()));
 		
 		Iterator<DbItem> cardListIterator = cardList.iterator();
 		DbItem firstOutput = cardListIterator.next();
-		System.out.println(firstOutput.getModifiablePrintings().size());
-		DbPrinting printing = firstOutput.getDbPrinting(0);
 		
-		
+		String cardName = firstOutput.getName();
+    	String cardType = firstOutput.getFullType();
+    	DbPrinting printing = firstOutput.getDbPrinting(0);
     	String setCode = printing.getSetCode().toLowerCase();
     	String id = printing.getId();
-    	
-    	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
-    	System.out.println(url);
+		
+		PriceGetter scg = new StarCityGames();
+    	scg.getSpecificCardPrice(cardName, setCode, id, Style.NON_FOIL);
+		
 	}
 }

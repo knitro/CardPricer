@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.priceGetter;
+package knitro.betterSearch.priceGetter;
 
 import java.util.List;
 
@@ -12,6 +12,7 @@ public interface PriceGetter {
 	
 	public abstract List<CardInfo> getCardInfo_sell(Search searchTerm);
 	
-	public abstract String getSpecificCardURL(String cardName, String setName, int collectorNumber, Style style );
+	public abstract String getSpecificCardURL(String cardName, String setName, String collectorNumber, Style style);
 	
+	public abstract double getSpecificCardPrice(String cardName, String setName, String collectorNumber, Style style);
 }

@@ -16,7 +16,10 @@ import knitro.betterSearch.database.card.DbItem;
 import knitro.betterSearch.database.card.DbPrinting;
 import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch.database.search.impl.SearchImpl;
+import knitro.betterSearch.priceGetter.PriceGetter;
+import knitro.betterSearch.priceGetter.scg.StarCityGames;
 
 public class FeelingLuckyServlet extends HttpServlet {
 
@@ -134,7 +137,7 @@ public class FeelingLuckyServlet extends HttpServlet {
 	 * This method assumes the following:
 	 * <ul>
 	 * 	<li>The search is for the "Selling Price".
-	 * 	<li>The search expects the MoE to be TODO.
+	 * 	<li>The search expects the MoE to be exact (0).
 	 * 	<li>The filter is whatever this servlet has as its field.
 	 * </ul>
 	 * @param searchTerm
@@ -142,7 +145,7 @@ public class FeelingLuckyServlet extends HttpServlet {
 	 */
 	private Search generateSearch(String searchTerm) {
 		
-		Search returnSearch = new SearchImpl(searchTerm, false, 0, filter);
+		Search returnSearch = new SearchImpl(searchTerm, false, 5, filter);
 		return returnSearch;
 		
 	}
@@ -175,20 +178,34 @@ public class FeelingLuckyServlet extends HttpServlet {
         out.println("</form>");
         
         if (card != null) {
-        	//Card Details:
-        	out.println("<h1>" + card.getName() + "</h1>");
-        	out.println("<h3>" + card.getFullType() + "</h3>");
         	
-        	//Card Image:
+        	//Card Information:
+        	String cardName = card.getName();
+        	String cardType = card.getFullType();
         	DbPrinting printing = card.getDbPrinting(0);
         	String setCode = printing.getSetCode().toLowerCase();
         	String id = printing.getId();
         	
+        	//Check Foiling:
+        	boolean hasFoil = printing.isHasFoil();
+        	boolean hasNonFoil = printing.isHasNonFoil();
+        	Style currentStyle = (!hasNonFoil) ? Style.FOIL : Style.NON_FOIL;
+        	
+        	//Card Details:
+        	out.println("<h1>" + cardName + "</h1>");
+        	out.println("<h3>" + cardType + "</h3>");
+        	
+        	//Card Prices:
+        	PriceGetter scg = new StarCityGames();
+        	double scgPrice = scg.getSpecificCardPrice(cardName, setCode, id, currentStyle);
+        	out.println("<h4> StarCityGames Price: " + scgPrice +"</h4>");
+        	
+        	//Card Image:
         	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
         	
         	out.println("<img src=\"" + url + "\" alt=\"image here\">");
         	
-        	//Card Prices:
+        	
         }
         
         out.println("</body>");

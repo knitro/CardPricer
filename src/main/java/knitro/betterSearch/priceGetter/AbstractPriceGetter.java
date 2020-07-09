@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.priceGetter;
+package knitro.betterSearch.priceGetter;
 
 public abstract class AbstractPriceGetter implements PriceGetter {
 
