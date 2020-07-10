@@ -175,6 +175,7 @@ public class FeelingLuckyServlet extends HttpServlet {
         out.println("<html>");
         out.println("<head>");
         out.println("<title>BetterSearch: I'm Feeling Lucky</title>");
+        addSearchBarCSS(out);
         out.println("</head>");
         out.println("<body>");
         
@@ -234,5 +235,50 @@ public class FeelingLuckyServlet extends HttpServlet {
 	
 	private void initialiseDatabase() {
 		DATABASE.loadDatabase();
+	}
+	
+	private void addSearchBarCSS(PrintWriter out) {
+		
+		String searchBarCSS = "* {\r\n" + 
+				"  box-sizing: border-box;\r\n" + 
+				"}\r\n" + 
+				"\r\n" + 
+				"/* Style the search field */\r\n" + 
+				"form.example input[type=text] {\r\n" + 
+				"  padding: 10px;\r\n" + 
+				"  font-size: 17px;\r\n" + 
+				"  border: 1px solid grey;\r\n" + 
+				"  float: left;\r\n" + 
+				"  width: 80%;\r\n" + 
+				"  background: #f1f1f1;\r\n" + 
+				"}\r\n" + 
+				"\r\n" + 
+				"/* Style the submit button */\r\n" + 
+				"form.example button {\r\n" + 
+				"  float: left;\r\n" + 
+				"  width: 20%;\r\n" + 
+				"  padding: 10px;\r\n" + 
+				"  background: #2196F3;\r\n" + 
+				"  color: white;\r\n" + 
+				"  font-size: 17px;\r\n" + 
+				"  border: 1px solid grey;\r\n" + 
+				"  border-left: none; /* Prevent double borders */\r\n" + 
+				"  cursor: pointer;\r\n" + 
+				"}\r\n" + 
+				"\r\n" + 
+				"form.example button:hover {\r\n" + 
+				"  background: #0b7dda;\r\n" + 
+				"}\r\n" + 
+				"\r\n" + 
+				"/* Clear floats */\r\n" + 
+				"form.example::after {\r\n" + 
+				"  content: \"\";\r\n" + 
+				"  clear: both;\r\n" + 
+				"  display: table;\r\n" + 
+				"}";
+		
+		out.println("<style>");
+		out.println(searchBarCSS);
+		out.println("</style>");
 	}
 }
