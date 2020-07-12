@@ -271,7 +271,6 @@ public class FeelingLuckyServlet extends HttpServlet {
     	    //Capitalise First Letter
         	currentStyle_string = currentStyle_string.replaceFirst(currentStyle_string.substring(0, 1), currentStyle_string.substring(0, 1).toUpperCase());
         	
-        	
         	/*Print Card Details*/
         	out.println("<h1>" + cardName + "</h1>");
         	out.println("<h2>" + cardType + "</h2>");
@@ -373,16 +372,20 @@ public class FeelingLuckyServlet extends HttpServlet {
 	
 	private void addColumnCSS(PrintWriter out) {
 		
-		String columnCSS = ".row {\r\n" + 
-				"  display: flex;\r\n" + 
-				"}\r\n" + 
-				"\r\n" + 
-				".column {\r\n" + 
-				"  flex: 50%;\r\n" + 
+		String columnCSS = ".column {\r\n" + 
+				"  float: left;\r\n" + 
+				"  width: 50%;\r\n" + 
+				"  padding: 10px;\r\n" + 
+				"}";
+		String rowCSS = ".row:after {\r\n" + 
+				"  content: \"\";\r\n" + 
+				"  display: table;\r\n" + 
+				"  clear: both;\r\n" + 
 				"}";
 		
 		out.println("<style>");
 		out.println(columnCSS);
+		out.println(rowCSS);
 		out.println("</style>");
 		
 	}
