@@ -15,6 +15,5 @@
 		<servlet-name>FeelingLucky</servlet-name>
 		<url-pattern>/lucky</url-pattern>
 	</servlet-mapping>
-
-
+	
 </web-app>

@@ -157,6 +157,14 @@ public class FeelingLuckyServlet extends HttpServlet {
 		return returnSearch;
 		
 	}
+
+	private void initialiseDatabase() {
+		DATABASE.loadDatabase();
+	}
+	
+	/////////////////////////////////////////
+	/*Main Webpage Methods*/
+	/////////////////////////////////////////
 	
 	/**
 	 * Displays the Webpage using the PrintWriter to display the card, and its appropriate qualities.
@@ -167,18 +175,20 @@ public class FeelingLuckyServlet extends HttpServlet {
 	 */
 	private void displayWebpage(HttpServletRequest request, HttpServletResponse response, DbItem card) throws IOException {
 		
-		/*Initialisation*/
+		/*Servlet Initialisation*/
 		response.setContentType("text/html");
         PrintWriter out = response.getWriter();
         
-        /*HTML Generation*/
+        /*HTML Initialisation*/
         out.println("<html>");
         out.println("<head>");
         out.println("<title>BetterSearch: I'm Feeling Lucky</title>");
         addSearchBarCSS(out);
+        addColumnCSS(out);
         out.println("</head>");
         out.println("<body>");
         
+        /*Search Bar*/
         //Code From https://www.w3schools.com/howto/howto_css_search_button.asp
         out.println("<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css\">");
         out.println("<form class=\"example\" action=\"\">");
@@ -186,30 +196,112 @@ public class FeelingLuckyServlet extends HttpServlet {
         out.println("<button type=\"submit\"><i class=\"fa fa-search\"></i></button>");
         out.println("</form>");
         
+        /*Body*/
+        out.println("<div class=\"row\">");
         
-        if (card == null) {
-        	//TODO::
+        //Column 1: Image
+        out.println("<div class=\"column\">");
+        if ((card == null) || (card.equals(DbItemImpl.EMPTY))) {
+        	out.println("<h1> Use the Search Bar above to begin!</h1>");
+        } else {
+        	String cardName = card.getName();
+            out.println("<h1>" + cardName + "</h1>");
+        }
+        addCardImage(request, out, card);
+        out.println("</div");
+        
+        //Column 2: Details
+        out.println("<div class=\"column\">");
+        addCardDetails(out, card);
+        addCardPrices(out, card);
+        out.println("</div");
+        
+        //Close Row Div
+        out.println("</div");
+        
+        //Close Body and HTML
+        out.println("</body>");
+        out.println("</html>");
+        
+        out.close();
+	}
+	
+	/////////////////////////////////////////
+	/*HTML Content Additions*/
+	/////////////////////////////////////////
+	
+	private void addCardImage(HttpServletRequest request, PrintWriter out, DbItem card) {
+	
+		if ((card == null) || (card.equals(DbItemImpl.EMPTY))) {
+			String defaultImageLocation = request.getContextPath() + "/image/blank_card.png";
+			System.out.println(defaultImageLocation);
+//			String defaultImageLocation = "/image/blank_card.png";
+			out.println("<img src=\"" + defaultImageLocation + "\" alt=\"image here\"/>");
+		} else {
+			
+			//Get Relevant Card Details
+			DbPrinting printing = card.getDbPrinting(0);
+	    	String setCode = printing.getSetCode().toLowerCase();
+	    	String id = printing.getId();
+			
+			//Add Card Image
+	    	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
+	    	out.println("<img src=\"" + url + "\" alt=\"image here\">");
+		}
+	}
+	
+	private void addCardDetails(PrintWriter out, DbItem card) {
+		
+		if (card == null) {
+			//Do Nothing?
         } else if (card.equals(DbItemImpl.EMPTY)) {
-        	
         	out.println("<h2> No Results Found </h2>");
         } else {
         	
-        	//Card Information:
+        	/*Card Information*/
         	String cardName = card.getName();
         	String cardType = card.getFullType();
         	DbPrinting printing = card.getDbPrinting(0);
         	String setCode = printing.getSetCode().toLowerCase();
-        	String id = printing.getId();
         	
         	//Check Foiling:
         	boolean hasNonFoil = printing.isHasNonFoil();
         	Style currentStyle = (!hasNonFoil) ? Style.FOIL : Style.NON_FOIL;
+        	String currentStyle_string = currentStyle.toString().toLowerCase();
+    	    //Capitalise First Letter
+        	currentStyle_string = currentStyle_string.replaceFirst(currentStyle_string.substring(0, 1), currentStyle_string.substring(0, 1).toUpperCase());
         	
-        	//Card Details:
+        	
+        	/*Print Card Details*/
         	out.println("<h1>" + cardName + "</h1>");
-        	out.println("<h3>" + cardType + "</h3>");
+        	out.println("<h2>" + cardType + "</h2>");
+        	out.println("<h2>" + "Set Code: " + setCode + "</h2>");
+        	out.println("<h2>" + currentStyle_string + "</h2>");
+
+        }
+	}
+
+	private void addCardPrices(PrintWriter out, DbItem card) {
+		
+		if (card == null) {
+			//Do Nothing?
+        } else if (card.equals(DbItemImpl.EMPTY)) {
+        	//Do Nothing?
+        } else {
         	
-        	//Card Prices:
+        	/*Card Information:*/
+        	String cardName = card.getName();
+        	DbPrinting printing = card.getDbPrinting(0);
+        	String setCode = printing.getSetCode().toLowerCase();
+        	String id = printing.getId();
+        	
+        	//Check Foiling
+        	boolean hasNonFoil = printing.isHasNonFoil();
+        	Style currentStyle = (!hasNonFoil) ? Style.FOIL : Style.NON_FOIL;
+        	
+        	
+        	/*Get Card Prices*/
+        	//SCG
         	PriceGetter scg = new StarCityGames();
         	try {
         		double scgPrice = scg.getSpecificCardPrice(cardName, setCode, id, currentStyle);
@@ -219,23 +311,20 @@ public class FeelingLuckyServlet extends HttpServlet {
         		out.println("<h4> StarCityGames Price: No Price Found </h4>");
         	}
         	
-        	//Card Image:
-        	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
+        	//CK
+        	//TODO::
         	
-        	out.println("<img src=\"" + url + "\" alt=\"image here\">");
-        	
-        	
+        	//TCG
+        	//TODO::
         }
-        
-        out.println("</body>");
-        out.println("</html>");
-        
-        out.close();
+		
+		
+    	
 	}
 	
-	private void initialiseDatabase() {
-		DATABASE.loadDatabase();
-	}
+	/////////////////////////////////////////
+	/*CSS Methods*/
+	/////////////////////////////////////////
 	
 	private void addSearchBarCSS(PrintWriter out) {
 		
@@ -280,5 +369,21 @@ public class FeelingLuckyServlet extends HttpServlet {
 		out.println("<style>");
 		out.println(searchBarCSS);
 		out.println("</style>");
+	}
+	
+	private void addColumnCSS(PrintWriter out) {
+		
+		String columnCSS = ".row {\r\n" + 
+				"  display: flex;\r\n" + 
+				"}\r\n" + 
+				"\r\n" + 
+				".column {\r\n" + 
+				"  flex: 50%;\r\n" + 
+				"}";
+		
+		out.println("<style>");
+		out.println(columnCSS);
+		out.println("</style>");
+		
 	}
 }
