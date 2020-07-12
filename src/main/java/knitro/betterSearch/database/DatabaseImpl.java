@@ -79,39 +79,6 @@ public class DatabaseImpl implements Database {
 			return (o1.getName().compareTo(o2.getName()));
 		}
 	};
-	
-	private static final Comparator<DbItem> dbItemComparator_cardName = new Comparator<DbItem>(){
-		
-		@Override
-		public int compare(DbItem o1, DbItem o2) {
-			if (o1.getSortingValue() > o2.getSortingValue()) {
-				return 1;
-			} else {
-				return -1;
-			}
-		}
-	};
-	
-	private static final Comparator<DbItem> dbItemComparator_releaseDate = new Comparator<DbItem>(){
-		
-		@Override
-		public int compare(DbItem o1, DbItem o2) {
-			
-			DbPrinting o1_print = o1.getDbPrinting(0);
-			DbPrinting o2_print = o2.getDbPrinting(0);
-			
-			Date o1_date = o1_print.getDate();
-			Date o2_date = o2_print.getDate();
-			
-			if (o1_date.after(o2_date)) {
-				return -1;
-			} else if (o1_date.before(o2_date)) {
-				return 1;
-			} else {
-				return (o1.getName().compareTo(o2.getName()));
-			}
-		}
-	};
 
 	
 	///////////////////////////////////
