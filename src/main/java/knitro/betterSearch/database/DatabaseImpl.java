@@ -3,7 +3,10 @@ package knitro.betterSearch.database;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -23,6 +26,8 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+
+import org.apache.commons.io.FileUtils;
 
 import knitro.betterSearch.database.card.DbItem;
 import knitro.betterSearch.database.card.DbItemImpl;
@@ -45,10 +50,14 @@ public class DatabaseImpl implements Database {
 	public static final int MAX_NUM_OF_RESULTS = 10000;
 	
 	/*Locations*/
-	private static final String DB_LOCATION = "data/mtg/";
+	private static final String DB_LOCATION = "src/main/resources/data/mtg/";
 	private static final String DB_NAME = "AllPrintings.json";
 	private static final String SET_LIST_NAME = "SetList.json";
 //	private static final String TYPE_LIST_NAME = "CardTypes.json";
+	
+	/*Important URLs*/
+	private static final String URL_DB = "https://mtgjson.com/api/v5/AllPrintings.json";
+	private static final String URL_SET = "https://mtgjson.com/api/v5/SetList.json";
 	
 	private static final Comparator<DbItem> dbItemComparator = new Comparator<DbItem>(){
 		
@@ -283,25 +292,41 @@ public class DatabaseImpl implements Database {
 	
 	/**
 	 * Checks if the database file exists or not.
-	 * If not, it will execute the {@link #getDatabaseFile()} method.
+	 * If not, it will execute the {@link #downloadFile()} method.
 	 */
 	private void checkDatabaseFileExists() {
 		
-		boolean condition = false;
+		/*Check for Main Database File*/
 		
-		//TODO:: Adjust such that condition is adjusted when file does not exist.
-		
-		if (condition) {
-			getDatabaseFile();
+		try {
+			if (!new File(DB_LOCATION + DB_NAME).exists()) {
+				downloadFile(URL_DB, DB_LOCATION + DB_NAME);
+			}
+			
+			/*Check for Set List File*/
+			if (!new File(DB_LOCATION + SET_LIST_NAME).exists()) {
+				downloadFile(URL_SET, DB_LOCATION + SET_LIST_NAME);
+			}
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("This should not occur");
+		} catch (IOException e) {
+			throw new RuntimeException("This should not occur");
 		}
+		
 		return;
 	}
 	
 	/**
-	 * Gets the Database from <a href="https://mtgjson.com/">https://mtgjson.com/</a>.
+	 * Downloads a File from a given URL to a given file location.
+	 * @throws IOException 
+	 * @throws MalformedURLException 
 	 */
-	private void getDatabaseFile() {
-		//TODO::
+	private void downloadFile(String url, String fileLocation) throws MalformedURLException, IOException {
+		FileUtils.copyURLToFile(
+				  new URL(url), 
+				  new File(fileLocation), 
+				  500, 
+				  500);
 	}
 	
 	private JsonReader loadJSON(String directory) {
