@@ -497,46 +497,10 @@ public class DatabaseImpl implements Database {
 
 	private void setSortingValue(DbItem result) {
 		
-//		result.setSortingValue(distance);
 		DbPrinting latestPrinting = result.getDbPrinting(0);
 		Date releaseDate = latestPrinting.getDate();
 		result.setSortingValue(releaseDate.getTime());
 		
 	}
 	
-	///////////////////////////////////
-	/*Main Method*/
-	///////////////////////////////////
-	
-//	public static void main (String[] args) {
-//		DatabaseImpl test = new DatabaseImpl();
-//		test.loadDatabase();
-//		Set<DbItem> cardList = test.getCards(new SearchImpl("Chandra", false, 0, new Filter()));
-//		
-//		Iterator<DbItem> cardListIterator = cardList.iterator();
-//		DbItem firstOutput = cardListIterator.next();
-//		System.out.println(firstOutput.getModifiablePrintings().size());
-//		DbPrinting printing = firstOutput.getDbPrinting(0);
-//		
-//		
-//    	String setCode = printing.getSetCode().toLowerCase();
-//    	String id = printing.getId();
-//    	
-//    	String url = "https://api.scryfall.com/cards/" + setCode + "/" + id + "?format=image&version=normal";
-//    	System.out.println(url);
-//	}
-	
-//	public static void main (String[] args) {
-//		DatabaseImpl test = new DatabaseImpl();
-//		test.loadDatabase();
-//		Set<DbItem> cardList = test.getCards(new SearchImpl("Chandra", false, 0, new Filter()));
-//		
-//		Iterator<DbItem> cardListIterator = cardList.iterator();
-//		while (cardListIterator.hasNext()) {
-//			DbItem output = cardListIterator.next();
-//			System.out.println(output.getDbPrinting(0).getDate() + "\t\t" + output.getName());
-//			
-//		}
-//		
-//	}
 }
