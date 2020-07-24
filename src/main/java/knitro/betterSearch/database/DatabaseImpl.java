@@ -14,8 +14,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
@@ -88,7 +90,9 @@ public class DatabaseImpl implements Database {
 			return (o1.getName().compareTo(o2.getName()));
 		}
 	};
-
+	
+	/*Set Matching Margin of Error*/
+	private static final int SET_MARGIN_OF_ERROR = 5;
 	
 	///////////////////////////////////
 	/*Fields*/
@@ -99,10 +103,11 @@ public class DatabaseImpl implements Database {
 	
 	/*Main Database*/
 	private Set<String> cardNames;
-	private Map<String, DbItem> database;
+	private Map<String, DbItem> database; 
 	
 	/*Set List Database*/
 	private Map<String, String> setListMap;
+	private Set<String> setOfSets;
 	
 	//TODO:: Make this adjustable
 	private TypeOfMatch matching = TypeOfMatch.INCLUDE_LEAST_ONE;
@@ -452,8 +457,10 @@ public class DatabaseImpl implements Database {
 				boolean hasFoil = currentJSON.getBoolean("hasFoil");
 				boolean hasNonFoil = currentJSON.getBoolean("hasNonFoil");
 				
+				String frameVersion = currentJSON.getString("frameVersion");
+				
 				//Create add add the instance
-				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate, hasFoil, hasNonFoil);
+				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate, hasFoil, hasNonFoil, frameVersion);
 				currentCardEntry.addPrinting(currentPrinting);
 			}
 		}
@@ -488,6 +495,10 @@ public class DatabaseImpl implements Database {
 			
 			//Create Map Entry
 			setListMap.put(currentSetCode, currentSetName);
+			
+			//Add to setOfSets
+			setOfSets.add(currentSetCode);
+			setOfSets.add(currentSetName);
 		}
 		
 		/*Clean-Up*/
@@ -501,6 +512,85 @@ public class DatabaseImpl implements Database {
 		Date releaseDate = latestPrinting.getDate();
 		result.setSortingValue(releaseDate.getTime());
 		
+	}
+
+	@Override
+	public Set<String> getMatchingSets(String searchString) {
+		
+		/*Get Possible Matching Cards*/
+		
+		//Step 1: Apply cardName matches
+		Set<String> results = new TreeSet<String>(new Comparator<String>(){
+			@Override
+			public int compare(String o1, String o2) {
+				return (o1.compareTo(o2));
+			}
+		});
+
+		//Step 1a: Get exact matches
+		searchString = TypoAnalysis.removeSpecialChars(searchString); //Clean searchString 
+		
+		if (setOfSets.contains(searchString)) {
+			results.add(searchString);
+			System.out.println("Found exact Set!");
+			return results; //Finish early since exact match was found
+		}
+		
+		//Step 1b: Get cards that have the word contained within
+		for (String setName : setOfSets) {
+			
+			String setName_cleaned = TypoAnalysis.removeSpecialChars(setName);
+			if (setName_cleaned.contains(searchString)) {
+				results.add(setName_cleaned);
+				if (results.size() >= MAX_NUM_OF_RESULTS) {
+					System.out.println("Too many results. Displaying Top results");
+					return results;
+				}
+			}		
+		}
+		
+		//Step 1c: Get close matches using the TypoAnalysis Package.
+		for (String setName : setOfSets) {
+			
+			int distance = TypoAnalysis.getDifference(searchString, setName);
+			
+			//Check if card meets Margin of Error condition
+			if (distance <= SET_MARGIN_OF_ERROR) {
+				results.add(setName);
+				if (results.size() >= MAX_NUM_OF_RESULTS) {
+					System.out.println("Too many results. Displaying Top results");
+					return results;
+				}
+			}		
+		}
+		
+		System.out.println("Finished Search for: \"" + searchString 
+				+ "\" with " + results.size() + " results");
+		
+		return results;
+	}
+
+	@Override
+	public Set<DbItem> getCardsMatchingSet(String setUUID) {
+		
+		/*Initialisation*/
+		Set<DbItem> returnSet = new TreeSet<>(dbItemComparator);
+		
+		/*Get Cards that have the setUUID*/
+		for (String cardName : database.keySet()) {
+			DbItem card = database.get(cardName);
+			List<DbPrinting> cardPrintings = card.getPrintings();
+			printingLoop: for (DbPrinting currentPrinting : cardPrintings) {
+				String currentSetCode = currentPrinting.getSetCode();
+				if (Objects.equals(currentSetCode, setUUID)) {
+					returnSet.add(card);
+					break printingLoop;
+				}
+			}
+		}
+		
+		/*Return*/
+		return returnSet;
 	}
 	
 }

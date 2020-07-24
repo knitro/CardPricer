@@ -29,5 +29,17 @@ public interface Database {
 	/*Other Methods*/
 	///////////////////////////////////
 	
+	/**
+	 * Returns the Map of Sets.
+	 * <ul>
+	 * 	<li>String 1 = SetCode
+	 * 	<li>String 2 = SetName
+	 * </ul>
+	 * @return
+	 */
 	public abstract Map<String, String> getSetMap();
+
+	public abstract Set<String> getMatchingSets(String param);
+	
+	public abstract Set<DbItem> getCardsMatchingSet(String setUUID);
 }
