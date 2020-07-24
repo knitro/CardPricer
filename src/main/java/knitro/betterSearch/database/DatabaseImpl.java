@@ -458,9 +458,10 @@ public class DatabaseImpl implements Database {
 				boolean hasNonFoil = currentJSON.getBoolean("hasNonFoil");
 				
 				String frameVersion = currentJSON.getString("frameVersion");
+				String rarity = currentJSON.getString("rarity");
 				
 				//Create add add the instance
-				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate, hasFoil, hasNonFoil, frameVersion);
+				DbPrinting currentPrinting = new DbPrinting(currentSet_code, currentID, currentDate, hasFoil, hasNonFoil, frameVersion, rarity);
 				currentCardEntry.addPrinting(currentPrinting);
 			}
 		}

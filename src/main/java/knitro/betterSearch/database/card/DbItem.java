@@ -140,6 +140,27 @@ public abstract class DbItem {
 		return printings.get(index);
 	}
 	
+	/**
+	 * TODO::
+	 * @param setCode - the set code the set that the desired printing belongs to
+	 * @return the DbPrinting, otherwise null.
+	 */
+	public DbPrinting getDbPrinting(String setCode) {
+		
+		if (!isSorted) {
+			Collections.sort(printings);
+			isSorted = true;
+		}
+		
+		for (DbPrinting currentPrinting : printings) {
+			if (currentPrinting.getSetCode().equals(setCode)) {
+				return currentPrinting;
+			}
+		}
+		
+		return null;
+	}
+	
 	///////////////////////////////////
 	/*Database Check Methods*/
 	///////////////////////////////////
@@ -149,7 +170,13 @@ public abstract class DbItem {
 		/*Preconditions*/
 		Preconditions.preconditionCheck(setCode != null, "setCode is null");
 		
-		return printings.contains(setCode);
+		for (DbPrinting currentPrinting : printings) {
+			if (currentPrinting.getSetCode().equals(setCode)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	public boolean hasColours(Set<CardColour> colours, TypeOfMatch matching) {

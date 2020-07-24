@@ -4,19 +4,31 @@ import java.util.Date;
 
 public class DbPrinting implements Comparable<DbPrinting> {
 	
+	public enum FrameVersion {
+		FRAME_1993, FRAME_1997, FRAME_2003, FRAME_2015, FRAME_future 
+	}
+	
+	public enum Rarity {
+		COMMON, UNCOMMON, RARE, MYTHIC 
+	}
+	
 	private String setCode;
 	private String id;
 	private Date date;
 	private boolean hasFoil;
 	private boolean hasNonFoil;
+	private FrameVersion frame;
+	private Rarity rarity;
 	
-	public DbPrinting(String setCode, String id, Date date, boolean hasFoil, boolean hasNonFoil) {
+	public DbPrinting(String setCode, String id, Date date, boolean hasFoil, boolean hasNonFoil, String frameVersion, String rarity) {
 		super();
 		this.setCode = setCode;
 		this.id = id;
 		this.date = date;
 		this.hasFoil = hasFoil;
 		this.hasNonFoil = hasNonFoil;
+		this.frame = FrameVersion.valueOf(frameVersion);
+		this.rarity = Rarity.valueOf(rarity);
 	}
 	
 	public boolean isHasFoil() {
@@ -37,6 +49,14 @@ public class DbPrinting implements Comparable<DbPrinting> {
 
 	public Date getDate() {
 		return date;
+	}
+	
+	public FrameVersion getFrameVersion() {
+		return frame;
+	}
+	 
+	public Rarity getRarity() {
+		return rarity;
 	}
 
 	@Override
