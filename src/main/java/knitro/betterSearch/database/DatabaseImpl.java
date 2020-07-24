@@ -475,6 +475,7 @@ public class DatabaseImpl implements Database {
 		/*Variable Initialisation*/
 		System.out.println("SetList Loading: Started");
 		setListMap = new HashMap<>();
+		setOfSets = new HashSet<>();
 		
 		/*Load Database*/
 		String directory = DB_LOCATION + SET_LIST_NAME;
@@ -576,6 +577,7 @@ public class DatabaseImpl implements Database {
 		
 		/*Initialisation*/
 		Set<DbItem> returnSet = new TreeSet<>(dbItemComparator);
+		loadDatabase();
 		
 		/*Get Cards that have the setUUID*/
 		for (String cardName : database.keySet()) {

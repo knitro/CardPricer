@@ -16,4 +16,13 @@
 		<url-pattern>/lucky</url-pattern>
 	</servlet-mapping>
 	
+	<servlet>
+		<servlet-name>EVCalulator</servlet-name>
+		<servlet-class>knitro.betterSearch.servlets.SetEvServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>EVCalulator</servlet-name>
+		<url-pattern>/ev</url-pattern>
+	</servlet-mapping>
+	
 </web-app>

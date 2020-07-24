@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
+
 import java.util.List;
 import java.util.Set;
 
@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
 import knitro.betterSearch.database.Database;
 import knitro.betterSearch.database.DatabaseImpl;
 import knitro.betterSearch.database.card.DbItem;
@@ -21,7 +20,6 @@ import knitro.betterSearch.database.card.DbPrinting;
 import knitro.betterSearch.database.card.DbPrinting.FrameVersion;
 import knitro.betterSearch.database.card.DbPrinting.Rarity;
 import knitro.betterSearch.database.filter.CardColour;
-import knitro.betterSearch.database.filter.Filter;
 import knitro.betterSearch.database.search.Search;
 import knitro.betterSearch.database.search.Style;
 import knitro.betterSearch.database.search.impl.SearchImpl;
@@ -73,7 +71,6 @@ public class SetEvServlet extends HttpServlet {
 	public static Setting setting = Setting.NEWEST; //Default Setting is the Newest Version of the Card
 	private static final String reactURL = "http://localhost:3000";
 	private static final Database DATABASE = new DatabaseImpl();
-	private static final Filter filter = new Filter(); //Default Empty Filter
 	private static PriceGetter priceGetter = new StarCityGames(); //Default Setting = SCG Pricing
 	
 	/////////////////////////////////////////
@@ -111,54 +108,46 @@ public class SetEvServlet extends HttpServlet {
 	 */
 	private void processForm(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		
-		if (request.getParameterMap().keySet().size() == 0) {
-			displayWebpage(request, response, null);
-			return;
-		}
+		//TODO::TEST CODE
+		displayWebpage(request, response, "MB1");
+		return;
+		
+		//TODO:: UNCOMMENT BELOW LATER
+		
+//		if (request.getParameterMap().keySet().size() == 0) {
+//			displayWebpage(request, response, null);
+//			return;
+//		}
+		
+		
+		
 		
 		/*Get the Parameter*/
-		String param = request.getParameter("searchTerm");
-		
-		//Perform Null Checks
-		if (param == null) {
-			displayWebpage(request, response, null);
-			return;
-		}
-		
-		/*Perform the Search*/
-		
-		initialiseDatabase(); //Initialises the database if not already done
-		Set<String> setList = DATABASE.getMatchingSets(param); //Get the List of Matching Sets
-		
-		//Get the Closest Match
-		Iterator<String> cardListIterator = setList.iterator();
-		String firstOutput = null;
-		if (cardListIterator.hasNext()) { //This accounts for empty responses
-			//TODO:: This should eventually always be called. Test for this!!
-			firstOutput = cardListIterator.next();
-		}
-		
-		/*Display the Output*/
-		displayWebpage(request, response, firstOutput);
+//		String param = request.getParameter("searchTerm");
+//		
+//		
+//		//Perform Null Checks
+//		if (param == null) {
+//			displayWebpage(request, response, null);
+//			return;
+//		}
+//		
+//		/*Perform the Search*/
+//		
+//		initialiseDatabase(); //Initialises the database if not already done
+//		Set<String> setList = DATABASE.getMatchingSets(param); //Get the List of Matching Sets
+//		
+//		//Get the Closest Match
+//		Iterator<String> cardListIterator = setList.iterator();
+//		String firstOutput = null;
+//		if (cardListIterator.hasNext()) { //This accounts for empty responses
+//			//TODO:: This should eventually always be called. Test for this!!
+//			firstOutput = cardListIterator.next();
+//		}
+//		
+//		/*Display the Output*/
+//		displayWebpage(request, response, firstOutput);
 	
-	}
-	
-	/**
-	 * Generates a "I'm Feeling Lucky" Search instance.
-	 * This method assumes the following:
-	 * <ul>
-	 * 	<li>The search is for the "Selling Price".
-	 * 	<li>The search expects the MoE to be exact (0).
-	 * 	<li>The filter is whatever this servlet has as its field.
-	 * </ul>
-	 * @param searchTerm
-	 * @return
-	 */
-	private Search generateSearch(String searchTerm) {
-		
-		Search returnSearch = new SearchImpl(searchTerm, false, 0, filter);
-		return returnSearch;
-		
 	}
 
 	private void initialiseDatabase() {
@@ -225,6 +214,8 @@ public class SetEvServlet extends HttpServlet {
 		
 		/*Set Initialisations*/
 		Set<DbItem> setCards = DATABASE.getCardsMatchingSet(setUUID);
+		
+		System.out.println("setUUID = " + setUUID);
 		
 		if (setUUID.equals("MB1")) {
 			
@@ -328,6 +319,7 @@ public class SetEvServlet extends HttpServlet {
 			singlePackEV += (blackTotal / blackSlot.size());
 			singlePackEV += (redTotal / redSlot.size());
 			singlePackEV += (greenTotal / greenSlot.size());
+			singlePackEV += (multicolourTotal / multicolourSlot.size());
 			singlePackEV += (artifactLandTotal / artifactLandSlot.size());
 			singlePackEV += (preM15Total / preM15Slot.size());
 			singlePackEV += (postM15Total / postM15Slot.size());

@@ -5,7 +5,28 @@ import java.util.Date;
 public class DbPrinting implements Comparable<DbPrinting> {
 	
 	public enum FrameVersion {
-		FRAME_1993, FRAME_1997, FRAME_2003, FRAME_2015, FRAME_future 
+		
+		FRAME_1993("1993"), FRAME_1997("1997"), FRAME_2003("2003"), FRAME_2015("2015"), FRAME_future("future"); 
+		
+		private String value;
+		private FrameVersion(String value) {
+			this.value = value;
+		}
+		public static FrameVersion getFrameVersion(String value) {
+			if ("1993".equals(value)) {
+				return FRAME_1993;
+			} else if ("1997".equals(value)) {
+				return FRAME_1997;
+			} else if ("2003".equals(value)) {
+				return FRAME_2003;
+			} else if ("2015".equals(value)) {
+				return FRAME_2015;
+			} else if ("future".equals(value)) {
+				return FRAME_future;
+			} else {
+				return null;
+			}
+		}
 	}
 	
 	public enum Rarity {
@@ -27,8 +48,8 @@ public class DbPrinting implements Comparable<DbPrinting> {
 		this.date = date;
 		this.hasFoil = hasFoil;
 		this.hasNonFoil = hasNonFoil;
-		this.frame = FrameVersion.valueOf(frameVersion);
-		this.rarity = Rarity.valueOf(rarity);
+		this.frame = FrameVersion.getFrameVersion(frameVersion);
+		this.rarity = Rarity.valueOf(rarity.toUpperCase());
 	}
 	
 	public boolean isHasFoil() {
