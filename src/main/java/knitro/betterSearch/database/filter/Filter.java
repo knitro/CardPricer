@@ -1,24 +1,29 @@
-package knitro.betterSearch_legacy.database.filter;
+package knitro.betterSearch.database.filter;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import knitro.betterSearch_legacy.search.Style;
+import knitro.betterSearch.database.search.Style;
 import knitro.support.Preconditions;
 
 public class Filter {
 	
 	///////////////////////////////////
-	/*Fields*/
+	/*Constants*/
 	///////////////////////////////////
 	
 	/*Defaults for "NO_FILTER" or "No Filter Applied for this Field"*/
 	public static final String NO_FILTER_SETCODE = "NO_FILTER";
-	/*colour is assumed to have no filter if the set is empty*/
-	/*types is assumed to have no filter if set is empty*/
-	/*cmc is assumed to have no filter if cmc = -1*/
-	/*style is assumed to have "no filter" if style = Style.ANY*/
+	//colour is assumed to have no filter if the set is empty
+	//types is assumed to have no filter if set is empty
+	//cmc is assumed to have no filter if cmc = -1
+	//style is assumed to have "no filter" if style = Style.ANY
 	
+	///////////////////////////////////
+	/*Fields*/
+	///////////////////////////////////
+	
+	/*Fields of a Filter*/
 	private String setCode;
 	private Set<CardColour> colour;
 	private Set<CardType> types;

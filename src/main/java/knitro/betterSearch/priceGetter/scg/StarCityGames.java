@@ -1,4 +1,4 @@
-package knitro.betterSearch_legacy.priceGetter.scg;
+package knitro.betterSearch.priceGetter.scg;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,12 +13,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import knitro.betterSearch_legacy.priceGetter.AbstractPriceGetter;
+import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.Style;
+import knitro.betterSearch.priceGetter.AbstractPriceGetter;
+import knitro.betterSearch.priceGetter.NoPriceFoundException;
 import knitro.betterSearch_legacy.priceGetter.info.CardImage;
 import knitro.betterSearch_legacy.priceGetter.info.CardInfo;
 import knitro.betterSearch_legacy.priceGetter.info.impl.CardInfoImpl;
-import knitro.betterSearch_legacy.search.Search;
-import knitro.betterSearch_legacy.search.Style;
+import knitro.support.InvalidModeException;
 import knitro.support.Preconditions;
 
 public class StarCityGames extends AbstractPriceGetter {
@@ -48,7 +50,7 @@ public class StarCityGames extends AbstractPriceGetter {
 	@Override
 	public List<CardInfo> getCardInfo_sell(Search searchTerm) {
 		
-		/*Preconditions*/ //All checks are performed by OpenWeatherChecker
+		/*Preconditions*/
 		Preconditions.preconditionCheck(searchTerm != null, "searchTerm is null");
 		Preconditions.preconditionCheck(searchTerm.getIsSell(), "searchTerm is not sell");
 		
@@ -325,9 +327,8 @@ public class StarCityGames extends AbstractPriceGetter {
 		return cardName;
 	}
 
-	@Deprecated
 	@Override
-	public String getSpecificCardURL(String cardName, String setName, int collectorNumber, Style style) {
+	public String getSpecificCardURL(String cardName, String setName, String collectorNumber, Style style) {
 		
 		StringBuilder sb = new StringBuilder();
 		sb.append("https://starcitygames.com/");
@@ -336,7 +337,12 @@ public class StarCityGames extends AbstractPriceGetter {
 //		sb.append("karn-liberated-sgl-mtg-nph-1-enn/");
 		
 		//Card Name
-		sb.append("karn-liberated-");
+		String cardName_lower = cardName.toLowerCase();
+		String cardName_dashes = cardName_lower.replaceAll(" ", "-");
+		String cardName_apostrophe = cardName_dashes.replaceAll("'", "");
+		String cardName_comma = cardName_apostrophe.replaceAll(",", "");
+		sb.append(cardName_comma);
+		sb.append("-");
 		
 		//Set Name
 		sb.append("sgl-mtg-"); //Default for MTG Cards
@@ -345,17 +351,52 @@ public class StarCityGames extends AbstractPriceGetter {
 		sb.append("-");
 		
 		//Collector Number
-		//TODO: Currently impossible to get collector number
-		sb.append(Integer.toString(collectorNumber));
-		//TODO:: Double sided: add a at the end
-		/*
-		if (is Double Sided) {
-			sb.append("a");
-		} 
-		*/
-		sb.append("-enn/");
+		sb.append(collectorNumber);
+		
+		//Foiling
+		if (style.equals(Style.NON_FOIL)) {
+			sb.append("-enn/");
+		} else if (style.equals(Style.FOIL)) {
+			sb.append("-enf/");
+		} else {
+			throw new InvalidModeException("Style not recognised");
+		}
+		
 		
 		String returnString = sb.toString();
 		return returnString;
 	}
+
+	@Override
+	public double getSpecificCardPrice(String cardName, String setName, String collectorNumber, Style style) throws NoPriceFoundException {
+		
+		String url = getSpecificCardURL(cardName, setName, collectorNumber, style);
+		String urlContents = null;
+		try {
+			urlContents = getURLContents(new URL(url));
+//			System.out.println(urlContents);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("Should not occur: getSpecificCardURL broken while using getSpecificCardPrice");
+		}
+		
+		/*Parsing to Correct DOM Node*/
+		Document doc = Jsoup.parse(urlContents);
+		
+		System.out.println("url = " + url);
+		
+		Elements productSectionClasses = doc.select("span.price.price--withoutTax");
+		Element productSectionClass = null;
+		try {
+			productSectionClass = productSectionClasses.get(0); //Should be the first one
+		} catch (IndexOutOfBoundsException e) { //Must be 404 error
+			throw new NoPriceFoundException("No Price Found");
+		}
+		
+		String price = productSectionClass.text();
+		String price_editted = price.replace("$", "");
+		
+		return Double.parseDouble(price_editted);
+		
+	}
+	
 }

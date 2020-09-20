@@ -1,22 +1,25 @@
-package knitro.betterSearch_legacy.database.card;
+package knitro.betterSearch.database.card;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
-import knitro.betterSearch_legacy.database.filter.CardColour;
-import knitro.betterSearch_legacy.database.filter.CardType;
-import knitro.betterSearch_legacy.database.filter.TypeOfMatch;
+import knitro.betterSearch.database.filter.CardColour;
+import knitro.betterSearch.database.filter.CardType;
+import knitro.betterSearch.database.filter.TypeOfMatch;
 import knitro.support.InvalidModeException;
 import knitro.support.Preconditions;
 
 public abstract class DbItem {
-
+	
 	///////////////////////////////////
 	/*Fields*/
 	///////////////////////////////////
 	
 	private final String name;
-	private final Set<String> printings;
+	private final List<DbPrinting> printings;
+	private boolean isSorted;
 	
 	private final Set<CardColour> colours;
 	private final Set<CardType> types;
@@ -25,22 +28,41 @@ public abstract class DbItem {
 	private final String fullType;
 	private final String text;
 	
+	private long sortingValue; //Used for comparators
+	private final boolean isEmpty;
+	
 	///////////////////////////////////
 	/*Constructors*/
 	///////////////////////////////////
 	
-	public DbItem(String name, Set<String> printings,
-			Set<CardColour> colours, Set<CardType> type, int cmc,
-			String fullType, String text) {
+	/**
+	 * This constructor is to be only used for an "EMPTY" DbItem.
+	 */
+	protected DbItem() {
+		this.isEmpty = true;
+		this.types = null;
+		this.colours = null;
+		this.printings = null;
+		this.name = null;
+		this.fullType = null;
+		this.text = null;
+		this.cmc = -1;
+		
+	}
+	
+	public DbItem(String name, Set<CardColour> colours, Set<CardType> type, 
+			int cmc, String fullType, String text) {
+		
 		super();
 		this.name = name;
-		this.printings = printings;
-		
+		this.printings = new ArrayList<>();
+		this.isSorted = false;
 		this.colours = colours;
 		this.types = type;
 		this.cmc = cmc;
 		this.fullType = fullType;
 		this.text = text;
+		this.isEmpty = false;
 	}
 	
 	///////////////////////////////////
@@ -50,19 +72,19 @@ public abstract class DbItem {
 	///////////////////////////////////
 	/*Public Methods*/
 	///////////////////////////////////
-	
+
 	public String getName() {
 		return name;
 	}
 
-	public Set<String> getPrintings() {
-		return Collections.unmodifiableSet(printings);
+	public List<DbPrinting> getPrintings() {
+		return Collections.unmodifiableList(printings);
 	}
 	
-	public Set<String> getModifiablePrintings() {
+	public List<DbPrinting> getModifiablePrintings() {
 		return printings;
 	}
-
+	
 	public Set<CardColour> getColours() {
 		return Collections.unmodifiableSet(colours);
 	}
@@ -83,6 +105,62 @@ public abstract class DbItem {
 		return text;
 	}
 	
+	public long getSortingValue() {
+		return sortingValue;
+	}
+
+	public void setSortingValue(long sortingValue) {
+		this.sortingValue = sortingValue;
+	}
+	
+	public void addPrinting(DbPrinting printing) {
+		printings.add(printing);
+	}
+	
+	/**
+	 * This method will return a List with:
+	 * <ul>
+	 * 	<li>index = 0 ==> printing (set)
+	 * 	<li>index = 1 ==> id (collector number)
+	 * </ul>
+	 * @param index
+	 * @return
+	 */
+	public DbPrinting getDbPrinting(int index) {
+		
+		/*Precondition Check*/
+		Preconditions.preconditionCheck(index < printings.size(), "index is too large");
+		Preconditions.preconditionCheck(index >= 0, "index is too small");
+		
+		if (!isSorted) {
+			Collections.sort(printings);
+			isSorted = true;
+		}
+		
+		return printings.get(index);
+	}
+	
+	/**
+	 * TODO::
+	 * @param setCode - the set code the set that the desired printing belongs to
+	 * @return the DbPrinting, otherwise null.
+	 */
+	public DbPrinting getDbPrinting(String setCode) {
+		
+		if (!isSorted) {
+			Collections.sort(printings);
+			isSorted = true;
+		}
+		
+		for (DbPrinting currentPrinting : printings) {
+			if (currentPrinting.getSetCode().equals(setCode)) {
+				return currentPrinting;
+			}
+		}
+		
+		return null;
+	}
+	
 	///////////////////////////////////
 	/*Database Check Methods*/
 	///////////////////////////////////
@@ -92,7 +170,13 @@ public abstract class DbItem {
 		/*Preconditions*/
 		Preconditions.preconditionCheck(setCode != null, "setCode is null");
 		
-		return printings.contains(setCode);
+		for (DbPrinting currentPrinting : printings) {
+			if (currentPrinting.getSetCode().equals(setCode)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	public boolean hasColours(Set<CardColour> colours, TypeOfMatch matching) {

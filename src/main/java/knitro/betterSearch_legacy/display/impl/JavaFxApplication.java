@@ -14,19 +14,19 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import knitro.betterSearch_legacy.database.Database;
-import knitro.betterSearch_legacy.database.DatabaseImpl;
-import knitro.betterSearch_legacy.database.card.DbItem;
-import knitro.betterSearch_legacy.database.filter.CardColour;
-import knitro.betterSearch_legacy.database.filter.CardType;
-import knitro.betterSearch_legacy.database.filter.Filter;
-import knitro.betterSearch_legacy.priceGetter.PriceGetter;
+import knitro.betterSearch.database.Database;
+import knitro.betterSearch.database.DatabaseImpl;
+import knitro.betterSearch.database.card.DbItem;
+import knitro.betterSearch.database.filter.CardColour;
+import knitro.betterSearch.database.filter.CardType;
+import knitro.betterSearch.database.filter.Filter;
+import knitro.betterSearch.database.search.Search;
+import knitro.betterSearch.database.search.Style;
+import knitro.betterSearch.database.search.impl.SearchImpl;
+import knitro.betterSearch.priceGetter.PriceGetter;
+import knitro.betterSearch.priceGetter.scg.StarCityGames;
 import knitro.betterSearch_legacy.priceGetter.info.CardImage;
 import knitro.betterSearch_legacy.priceGetter.info.CardInfo;
-import knitro.betterSearch_legacy.priceGetter.scg.StarCityGames;
-import knitro.betterSearch_legacy.search.Search;
-import knitro.betterSearch_legacy.search.Style;
-import knitro.betterSearch_legacy.search.impl.SearchImpl;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
@@ -505,7 +505,7 @@ public class JavaFxApplication extends Application {
 		else if (numOfResults == 1) {
 			
 			for (DbItem query : possibleCards) { //Note: This loop should only once
-				Set<String> printings = query.getPrintings();
+//				<String> printings = query.getPrintings();
 				
 				//Check if there is only 1 printing :: Shortcut does not work. Collectors number is required
 				/*

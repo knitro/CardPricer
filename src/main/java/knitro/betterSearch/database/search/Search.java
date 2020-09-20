@@ -1,6 +1,6 @@
-package knitro.betterSearch_legacy.search;
+package knitro.betterSearch.database.search;
 
-import knitro.betterSearch_legacy.database.filter.Filter;
+import knitro.betterSearch.database.filter.Filter;
 
 public interface Search {
 	
